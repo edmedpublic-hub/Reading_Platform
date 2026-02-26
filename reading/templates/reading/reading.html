@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Reading Lessons{% endblock %}
+
+{% block content %}
+<section class="container">
+  <header class="text-center mb-4">
+    <h1>📖 Reading Lessons</h1>
+    <p class="subtitle text-muted">Enhance your skills with curated lessons</p>
+  </header>
+
+  <section id="lesson-section">
+    <h2 class="section-title">Available Lessons</h2>
+
+    <!-- Server-rendered fallback -->
+    <div id="lesson-list" class="lesson-list">
+      {% if lessons %}
+        {% for lesson in lessons %}
+          <div class="lesson-card">
+            <h2>
+              <a href="{% url 'reading:detail' lesson.id %}">
+                {{ lesson.title }}
+              </a>
+            </h2>
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="loading text-muted">No lessons available.</p>
+      {% endif %}
+    </div>
+  </section>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'reading/reading.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script type="module" src="{% static 'reading/reading.main.js' %}"></script>
+{% endblock %}

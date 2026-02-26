@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="text-center py-4">
+  <h1 class="mb-3">Welcome to Reading Platform</h1>
+  <p class="lead text-muted mb-5">
+    Explore structured reading lessons and improve comprehension.
+  </p>
+</section>
+
+<!-- Reading Module Card -->
+<section class="container">
+  <div class="row justify-content-center">
+
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm text-center">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">📖 Reading Module</h5>
+          <p class="card-text text-muted flex-grow-1">
+            Browse books, units, and lessons.
+          </p>
+          <a href="{% url 'reading:home' %}" class="btn btn-primary">
+            Go to Reading
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
