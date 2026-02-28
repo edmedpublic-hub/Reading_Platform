@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}{{ unit.title }} - Lessons | Reading Platform{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'reading:book_list' %}" class="text-decoration-none">Library</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'reading:unit_list' unit.book.id %}" class="text-decoration-none">{{ unit.book.title }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ unit.title }}</li>
+  </ol>
+</nav>
+
+<header class="mb-5">
+  <div class="d-flex align-items-center">
+    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+      <span class="fw-bold">L</span>
+    </div>
+    <div>
+      <h1 class="fw-bold mb-0">{{ unit.title }}</h1>
+      <p class="text-muted mb-0">Select a lesson to begin practicing your reading.</p>
+    </div>
+  </div>
+</header>
+
+<div class="list-group shadow-sm border-0">
+  {% for lesson in lessons %}
+  <a href="{% url 'reading:lesson_detail' lesson.id %}" 
+     class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-4 border-start-0 border-end-0 transition-lesson">
+    <div>
+      <h5 class="mb-1 fw-bold">{{ lesson.title }}</h5>
+      <small class="text-muted">Interactive Reading & AI Feedback</small>
+    </div>
+    <span class="badge bg-primary rounded-pill px-3 py-2">Start Lesson &rarr;</span>
+  </a>
+  {% empty %}
+  <div class="list-group-item text-center py-5">
+    <p class="text-muted mb-0">No lessons available for this unit yet.</p>
+  </div>
+  {% endfor %}
+</div>
+
+<style>
+  /* Clean list interaction for lessons */
+  .transition-lesson {
+    transition: background-color 0.2s ease, padding-left 0.2s ease;
+  }
+  .transition-lesson:hover {
+    background-color: #f8f9fa;
+    padding-left: 2rem !important; /* Visual cue that it's selectable */
+    color: var(--bs-primary);
+  }
+</style>
+{% endblock %}

@@ -23,6 +23,9 @@
   --highlight-text: #111827;
 
   --error-text: #b91c1c;
+  --success-light: #d1e7dd;
+  --warning-light: #fff3cd;
+  --info-light: #cff4fc;
 }
 
 /* Dark theme — matches Bootstrap */
@@ -41,6 +44,9 @@ html[data-bs-theme="dark"] #reading-app {
   --highlight-text: #fef9c3;
 
   --error-text: #fecaca;
+  --success-light: #0f2e1f;
+  --warning-light: #332d1a;
+  --info-light: #1a3340;
 }
 
 /* Layout container */
@@ -58,6 +64,7 @@ html[data-bs-theme="dark"] #reading-app {
   margin-top: 0;
   color: var(--text-main);
   font-weight: 800;
+  font-size: 2rem;
 }
 
 #reading-app .subtitle {
@@ -67,12 +74,13 @@ html[data-bs-theme="dark"] #reading-app {
 
 /* Lesson text */
 #reading-app #lessonText {
-  font-size: 18px;
+  font-size: 1.25rem;
   color: var(--text-main);
+  line-height: 1.8;
 }
 
 #reading-app #lessonText p {
-  margin-bottom: 14px;
+  margin-bottom: 1.2rem;
 }
 
 /* ===========================
@@ -87,6 +95,19 @@ html[data-bs-theme="dark"] #reading-app {
   border: 2px solid var(--highlight-border);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  transition: all 0.2s ease;
+}
+
+#reading-app .highlight:hover {
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(250, 204, 21, 0.3);
+}
+
+/* Active sentence indicator */
+#reading-app .active-sentence {
+  border-left: 4px solid var(--highlight-border);
+  padding-left: 12px;
+  background: linear-gradient(to right, var(--highlight-bg) 0%, transparent 90%);
 }
 
 /* Optional mispronounced emphasis */
@@ -94,23 +115,49 @@ html[data-bs-theme="dark"] #reading-app {
   background: #fef08a;
   color: var(--error-text);
   font-weight: bold;
-  padding: 2px 4px;
+  padding: 2px 6px;
   border-radius: 4px;
+  border-bottom: 2px solid #dc2626;
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+#reading-app .mispronounced:hover {
+  background: #fde047;
+  transform: scale(1.02);
 }
 
 /* ===========================
-   BUTTONS
-   We now let Bootstrap handle styling.
+   BUTTON STYLES
+   Enhanced for better visual hierarchy
    =========================== */
 
 #reading-app button {
-  margin: 6px;
+  margin: 0;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
-/* Disabled state still remains useful */
+#reading-app button:active {
+  transform: translateY(1px);
+}
+
+#reading-app .btn-group {
+  gap: 8px;
+}
+
+/* Disabled state */
 #reading-app button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+}
+
+/* Card header icons */
+#reading-app .card-header h5 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* ===========================
@@ -120,10 +167,54 @@ html[data-bs-theme="dark"] #reading-app {
 #reading-app .feedback-box {
   background: #f3f6ff;
   border: 1px solid #e6eefc;
-  padding: 14px;
-  border-radius: 8px;
-  margin-top: 16px;
+  padding: 1.5rem;
+  border-radius: 12px;
   color: #0b2a4a;
+  min-height: 100px;
+  transition: all 0.3s ease;
+}
+
+html[data-bs-theme="dark"] #reading-app .feedback-box {
+  background: #1a2639;
+  border-color: #2d3748;
+  color: #e2e8f0;
+}
+
+/* Feedback content styling */
+#reading-app .feedback-container {
+  animation: fadeIn 0.5s ease-in;
+}
+
+#reading-app .score-badge {
+  font-size: 1.2rem;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+}
+
+/* Problem words cards */
+#reading-app .problem-words .card {
+  transition: all 0.2s ease;
+  border-width: 2px;
+}
+
+#reading-app .problem-words .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ===========================
+   RECORDING STATUS
+   =========================== */
+
+#reading-app #recording-status {
+  animation: pulse 1.5s infinite;
+  border-left: 4px solid #dc3545;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
 }
 
 /* ===========================
@@ -136,6 +227,13 @@ html[data-bs-theme="dark"] #reading-app {
   border-radius: 10px;
   border: 1px solid #e5e7eb;
   background: #fafafa;
+  transition: all 0.2s ease;
+}
+
+#reading-app .lesson-card:hover {
+  transform: translateX(4px);
+  border-left: 4px solid var(--primary);
+  background: white;
 }
 
 /* Links (match brand color) */
@@ -143,20 +241,165 @@ html[data-bs-theme="dark"] #reading-app {
   color: var(--primary);
   text-decoration: none;
   font-weight: 600;
+  transition: all 0.2s ease;
 }
 
 #reading-app a:hover {
   color: var(--primary-dark);
   text-decoration: underline;
+  transform: translateX(2px);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* ===========================
+   ANIMATIONS
+   =========================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+#reading-app .card {
+  animation: slideIn 0.3s ease-out;
+  transition: all 0.3s ease;
+}
+
+#reading-app .card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+/* ===========================
+   COMPACT LAYOUT STYLES
+   =========================== */
+
+/* Reduce card padding */
+#reading-app .card-header.py-2 {
+  padding: 0.5rem 1rem !important;
+}
+
+#reading-app .card-body.py-2 {
+  padding: 0.5rem 1rem !important;
+}
+
+#reading-app .card-body.py-1 {
+  padding: 0.25rem 1rem !important;
+}
+
+/* Smaller buttons for compact layout */
+#reading-app .btn-sm-compact {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+#reading-app .flex-fill {
+  min-width: 70px; /* Prevent buttons from getting too small */
+}
+
+/* Status indicators compact */
+#reading-app .alert.py-1 {
+  padding-top: 0.25rem !important;
+  padding-bottom: 0.25rem !important;
+  margin-bottom: 0 !important;
+  font-size: 0.85rem;
+}
+
+/* Feedback box compact */
+#reading-app .feedback-box.p-2 {
+  padding: 0.75rem !important;
+}
+
+#reading-app .feedback-box .small {
+  font-size: 0.85rem;
+}
+
+/* Mobile optimizations for compact layout */
+@media (max-width: 576px) {
+  #reading-app .d-flex.flex-wrap.gap-1 {
+    gap: 0.25rem !important;
+  }
+  
+  #reading-app .flex-fill {
+    flex: 1 1 calc(50% - 0.25rem) !important;
+  }
+  
+  /* On very small screens, stack the voice row */
+  #reading-app .row.g-2 .col-md-7,
+  #reading-app .row.g-2 .col-md-5 {
+    width: 100%;
+  }
+  
+  #reading-app .mt-1 {
+    margin-top: 0.25rem !important;
+  }
+}
+
+/* Remove duplicate default voice option from select */
+#voiceSelect option:first-child {
+  font-style: italic;
+}
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+@media (max-width: 768px) {
   #reading-app .container {
     padding: 16px;
+    margin: 10px auto;
   }
 
-  #reading-app button {
+  #reading-app h1 {
+    font-size: 1.5rem;
+  }
+
+  #reading-app #lessonText {
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+
+  #reading-app .btn {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  #reading-app .flex-fill {
+    flex: 1 1 calc(50% - 8px) !important;
+  }
+
+  #reading-app .card-header h5 {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #reading-app .flex-fill {
+    flex: 1 1 100% !important;
+  }
+
+  #reading-app .row.g-2 {
+    --bs-gutter-y: 0.5rem;
+  }
+
+  #reading-app .col-md-8,
+  #reading-app .col-md-4 {
     width: 100%;
+  }
+
+  #reading-app .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 10px;
+    align-items: start !important;
+  }
+
+  #reading-app .btn-outline-secondary {
+    width: 100%;
+  }
+
+  #reading-app .feedback-box {
+    padding: 1rem;
+    font-size: 0.95rem;
   }
 }

@@ -1,36 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Home{% endblock %}
+{% block title %}Home | Reading Platform{% endblock %}
 
 {% block content %}
-
-<!-- Hero -->
-<section class="text-center py-4">
-  <h1 class="mb-3">Welcome to Reading Platform</h1>
-  <p class="lead text-muted mb-5">
-    Explore structured reading lessons and improve comprehension.
-  </p>
+<section class="text-center py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h1 class="display-5 fw-bold mb-3">Master English Through Reading</h1>
+      <p class="lead text-muted mb-4">
+        Listen to native pronunciation, practice speaking, and get instant feedback with our AI-powered reading assistant.
+      </p>
+    </div>
+  </div>
 </section>
 
-<!-- Reading Module Card -->
-<section class="container">
+<section class="container mb-5">
   <div class="row justify-content-center">
-
-    <div class="col-md-6">
-      <div class="card h-100 shadow-sm text-center">
-        <div class="card-body d-flex flex-column">
-          <h5 class="card-title">📖 Reading Module</h5>
-          <p class="card-text text-muted flex-grow-1">
-            Browse books, units, and lessons.
+    <div class="col-md-5">
+      <div class="card h-100 shadow border-0 overflow-hidden transition-hover">
+        <div class="card-body p-4 text-center">
+          <div class="display-1 mb-3">📚</div>
+          <h3 class="card-title h4 mb-3">Your Library</h3>
+          <p class="card-text text-muted mb-4">
+            Access your books, units, and interactive lessons.
           </p>
-          <a href="{% url 'reading:home' %}" class="btn btn-primary">
-            Go to Reading
+          <a href="{% url 'reading:book_list' %}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm">
+            Start Reading
           </a>
         </div>
       </div>
     </div>
-
   </div>
 </section>
 
+<style>
+  /* Subtle polish for portfolio look */
+  .transition-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .transition-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175)!important;
+  }
+</style>
 {% endblock %}

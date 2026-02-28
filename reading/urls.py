@@ -1,14 +1,19 @@
 from django.urls import path, include
 from . import views
-from .api_urls import urlpatterns as api_urlpatterns
 
 app_name = "reading"
 
 urlpatterns = [
-    # Template views
-    path("", views.reading_home, name="home"),
-    path("<int:pk>/", views.reading_detail, name="detail"),
-
-    # API routes
-    path("api/", include((api_urlpatterns, "reading_api"))),
+    # Template URLs
+    path("books/", views.book_list, name="book_list"),
+    path("books/<int:book_id>/units/", views.unit_list, name="unit_list"),
+    path("units/<int:unit_id>/lessons/", views.lesson_list, name="lesson_list"),
+    path("lessons/<int:pk>/", views.lesson_detail, name="lesson_detail"),
+    
+    # Process endpoints
+    path("lessons/<int:lesson_id>/process/", views.process_recording, name="process_recording"),
+    path("attempts/<int:attempt_id>/", views.get_attempt_detail, name="attempt_detail"),
+    
+    # API endpoints (delegate to api_urls.py)
+    path("api/", include("reading.api_urls")),
 ]
