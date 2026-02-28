@@ -1,6 +1,23 @@
+# Virtual environments
 venv/
 .venv/
-*.pyc
+
+# Python cache
 __pycache__/
-db.sqlite3
+*.pyc
+
+# Environment variables (SECRET KEYS)
 .env
+
+# Local database
+db.sqlite3
+
+# Collected static files (production build)
+staticfiles/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
