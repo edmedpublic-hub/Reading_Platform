@@ -1,17 +1,12 @@
 #!/usr/bin/env bash
-
+# exit on error
 set -o errexit
-set -o pipefail
-set -o nounset
 
-# 1. Install system dependencies for PyAudio
-apt-get update && apt-get install -y portaudio19-dev
-
-# 2. Install Python dependencies
+# 1. Install Python dependencies from your updated requirements.txt
 pip install -r requirements.txt
 
-# 3. Collect static files
-python manage.py collectstatic --noinput
+# 2. Collect static files (Required for CSS/JS to show up on the web)
+python manage.py collectstatic --no-input
 
-# 4. Apply migrations
+# 3. Apply database migrations to SQLite
 python manage.py migrate
