@@ -5,6 +5,7 @@ Production-ready Django settings for reading_platform
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+import dj_database_url
 
 # --------------------------------------------------
 # BASE CONFIG
@@ -89,18 +90,19 @@ WSGI_APPLICATION = "reading_platform.wsgi.application"
 # (SQLite locally, PostgreSQL later automatically)
 # --------------------------------------------------
 
-DATABASES = {
-    "default": {
-        "ENGINE": os.getenv(
-            "DB_ENGINE",
-            "django.db.backends.sqlite3"
-        ),
-        "NAME": os.getenv(
-            "DB_NAME",
-            BASE_DIR / "db.sqlite3"
-        ),
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        "default": dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # --------------------------------------------------
 # PASSWORD VALIDATION
