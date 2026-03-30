@@ -1,405 +1,362 @@
-/* ===========================
-   READING APP — SCOPED STYLES
-   =========================== */
+/* ============================================================
+   READING APP — FINAL PRODUCTION CSS
+   Fixed: Arabic Ligatures, English Spacing, & Container Height
+   ============================================================ */
 
 #reading-app {
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  line-height: 1.7;
-
-  /* Light mode defaults */
-  --bg: #f6f8fb;
-  --card: #ffffff;
-
-  /* Brand colors (sync with Bootstrap primary) */
-  --primary: #0d6efd;
-  --primary-dark: #0a58ca;
-
-  --text-main: #1f2937;
-  --text-muted: #6b7280;
-
-  /* Reading highlight — accessible yellow */
-  --highlight-bg: #fff3b0;
-  --highlight-border: #facc15;
-  --highlight-text: #111827;
-
-  --error-text: #b91c1c;
-  --success-light: #d1e7dd;
-  --warning-light: #fff3cd;
-  --info-light: #cff4fc;
+    /* 1. Reset & Variables */
+    --primary-indigo: #4f46e5;
+    --slate-800: #1e293b;
+    --slate-500: #64748b;
+    --bg-app: #f8fafc;
+    --card-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
+    background-color: var(--bg-app);
+    color: var(--slate-800);
 }
 
-/* Dark theme — matches Bootstrap */
-html[data-bs-theme="dark"] #reading-app {
-  --bg: #0f172a;
-  --card: #111827;
-
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-
-  --text-main: #f9fafb;
-  --text-muted: #9ca3af;
-
-  --highlight-bg: #3a2f18;
-  --highlight-border: #eab308;
-  --highlight-text: #fef9c3;
-
-  --error-text: #fecaca;
-  --success-light: #0f2e1f;
-  --warning-light: #332d1a;
-  --info-light: #1a3340;
-}
-
-/* Layout container */
-#reading-app .container {
-  max-width: 880px;
-  margin: 20px auto;
-  padding: 24px;
-  background: var(--card);
-  border-radius: 12px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.08);
-}
-
-/* Headings */
-#reading-app h1 {
-  margin-top: 0;
-  color: var(--text-main);
-  font-weight: 800;
-  font-size: 2rem;
-}
-
-#reading-app .subtitle {
-  color: var(--text-muted);
-  margin-bottom: 20px;
-}
-
-/* Lesson text */
+/* 2. THE TEXT AREA (CRITICAL FIXES) */
 #reading-app #lessonText {
-  font-size: 1.25rem;
-  color: var(--text-main);
-  line-height: 1.8;
+    /* Fix: Reset any inherited stretching from previous CSS */
+    letter-spacing: normal !important; 
+    word-spacing: normal !important;
+    text-align: left !important;
+    text-justify: none !important;
+
+    /* Fix: Vertical Spacing & Height */
+    line-height: 2 !important; /* Increased for readability */
+    padding: 3rem !important;
+    min-height: 450px; /* Ensures enough space for 300 students to see clearly */
+    
+    /* Elegant Box */
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
 }
 
-#reading-app #lessonText p {
-  margin-bottom: 1.2rem;
+/* 3. ARABIC TEXT PROTECTION (THE "HORRIBLE" TEXT FIX) */
+/* This prevents Arabic characters from being spaced out like English */
+#reading-app #lessonText span:contains("{"), 
+#reading-app #lessonText span:contains("}"),
+#reading-app [lang="ar"],
+.arabic-text {
+    font-family: 'Amiri', 'Traditional Arabic', 'Noto Naskh Arabic', serif !important;
+    letter-spacing: 0 !important;
+    word-spacing: 0 !important;
+    font-size: 1.2em; /* Arabic often needs to be slightly larger to be legible */
+    line-height: 1.2 !important;
+    display: inline-block;
+    direction: rtl;
+    padding: 0 4px;
 }
 
-/* ===========================
-   READING HIGHLIGHT (MAIN)
-   =========================== */
-
-#reading-app .highlight {
-  background: var(--highlight-bg);
-  color: var(--highlight-text);
-  padding: 2px 6px;
-  border-radius: 6px;
-  border: 2px solid var(--highlight-border);
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
-  transition: all 0.2s ease;
+/* 4. SENTENCE & WORD INTERACTIVITY */
+#reading-app .reading-sentence {
+    display: inline; /* Keep flowing like a book */
+    padding: 4px 0;
+    border-radius: 4px;
+    transition: background 0.2s ease;
 }
 
-#reading-app .highlight:hover {
-  transform: scale(1.02);
-  box-shadow: 0 2px 8px rgba(250, 204, 21, 0.3);
-}
-
-/* Active sentence indicator */
 #reading-app .active-sentence {
-  border-left: 4px solid var(--highlight-border);
-  padding-left: 12px;
-  background: linear-gradient(to right, var(--highlight-bg) 0%, transparent 90%);
+    background-color: #eff6ff !important;
+    border-bottom: 2px solid var(--primary-indigo);
 }
 
-/* Optional mispronounced emphasis */
-#reading-app .mispronounced {
-  background: #fef08a;
-  color: var(--error-text);
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 4px;
-  border-bottom: 2px solid #dc2626;
-  cursor: help;
-  transition: all 0.2s ease;
+#reading-app .reading-word {
+    display: inline-block;
+    padding: 0 1px;
+    margin: 0;
+    /* Ensure words don't fly apart */
+    letter-spacing: -0.01em !important; 
 }
 
-#reading-app .mispronounced:hover {
-  background: #fde047;
-  transform: scale(1.02);
+/* 5. SIDEBAR & DASHBOARD REFINEMENT */
+#reading-app .sidebar-card {
+    border: none;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
 }
 
-/* ===========================
-   BUTTON STYLES
-   Enhanced for better visual hierarchy
-   =========================== */
-
-#reading-app button {
-  margin: 0;
-  transition: all 0.2s ease;
-  font-weight: 500;
+#reading-app .status-label {
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 12px 16px !important;
 }
 
-#reading-app button:active {
-  transform: translateY(1px);
+/* 6. BUTTONS */
+#reading-app .btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 10px 18px;
+    transition: all 0.2s ease;
 }
 
-#reading-app .btn-group {
-  gap: 8px;
+#reading-app .btn-success { background: #10b981 !important; border: none; }
+#reading-app .btn-warning { background: #f59e0b !important; border: none; color: white !important; }
+
+/* 7. PROGRESS BAR */
+#reading-app .progress {
+    height: 10px;
+    border-radius: 20px;
+    background-color: #f1f5f9;
+    margin-bottom: 2rem;
 }
 
-/* Disabled state */
-#reading-app button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+/* ============================================================
+   PRONUNCIATION FEEDBACK STYLES (NEW)
+   ============================================================ */
+
+/* Score Display Container */
+#scoreDisplayContainer {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid #dee2e6;
 }
 
-/* Card header icons */
-#reading-app .card-header h5 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+#scoreDisplay {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
-/* ===========================
-   FEEDBACK BOX
-   =========================== */
+.score-high { color: #28a745; }
+.score-medium { color: #ffc107; }
+.score-low { color: #dc3545; }
 
-#reading-app .feedback-box {
-  background: #f3f6ff;
-  border: 1px solid #e6eefc;
-  padding: 1.5rem;
-  border-radius: 12px;
-  color: #0b2a4a;
-  min-height: 100px;
-  transition: all 0.3s ease;
+/* Score Progress Bar */
+#scoreProgressBar {
+    transition: width 0.3s ease;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
 }
 
-html[data-bs-theme="dark"] #reading-app .feedback-box {
-  background: #1a2639;
-  border-color: #2d3748;
-  color: #e2e8f0;
+#scoreProgressBar.bg-success {
+    background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
 }
 
-/* Feedback content styling */
-#reading-app .feedback-container {
-  animation: fadeIn 0.5s ease-in;
+#scoreProgressBar.bg-warning {
+    background: linear-gradient(90deg, #ffc107 0%, #fd7e14 100%);
 }
 
-#reading-app .score-badge {
-  font-size: 1.2rem;
-  padding: 0.5rem 1rem;
-  border-radius: 50px;
+#scoreProgressBar.bg-danger {
+    background: linear-gradient(90deg, #dc3545 0%, #c82333 100%);
 }
 
-/* Problem words cards */
-#reading-app .problem-words .card {
-  transition: all 0.2s ease;
-  border-width: 2px;
+/* Feedback Text */
+.feedback-text {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 4px solid #667eea;
 }
 
-#reading-app .problem-words .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+/* Problem Words Container */
+.problem-words-container .badge {
+    font-size: 0.9rem;
+    padding: 6px 12px;
+    margin: 4px;
 }
 
-/* ===========================
-   RECORDING STATUS
-   =========================== */
+/* Problem Word Highlight */
+.problem-word-highlight {
+    background-color: #ffeb3b;
+    color: #d32f2f;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 3px;
+    text-decoration: underline;
+    text-decoration-color: #d32f2f;
+    text-decoration-thickness: 2px;
+}
 
-#reading-app #recording-status {
-  animation: pulse 1.5s infinite;
-  border-left: 4px solid #dc3545;
+/* Expected Text and User Transcript Styles */
+.expected-text {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+.user-transcript {
+    background-color: #e3f2fd;
+    padding: 10px;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+/* Pronunciation Feedback Animation */
+.pronunciation-feedback {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Live Transcript */
+.live-transcript {
+    background: #e7f5ff;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 0.9rem;
+    margin-top: 10px;
+    border-left: 3px solid #0d6efd;
+}
+
+/* Recording Status */
+#recording-status {
+    padding: 8px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    text-align: center;
+}
+
+#recording-status.recording {
+    background: #dc3545;
+    color: white;
+    animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.8; }
-  100% { opacity: 1; }
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
 }
 
-/* ===========================
-   LESSON LIST CARDS
-   =========================== */
-
-#reading-app .lesson-card {
-  padding: 1.2rem;
-  margin-bottom: 1rem;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fafafa;
-  transition: all 0.2s ease;
-}
-
-#reading-app .lesson-card:hover {
-  transform: translateX(4px);
-  border-left: 4px solid var(--primary);
-  background: white;
-}
-
-/* Links (match brand color) */
-#reading-app a {
-  color: var(--primary);
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-#reading-app a:hover {
-  color: var(--primary-dark);
-  text-decoration: underline;
-  transform: translateX(2px);
-}
-
-/* ===========================
-   ANIMATIONS
-   =========================== */
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes slideIn {
-  from { transform: translateX(-10px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-
-#reading-app .card {
-  animation: slideIn 0.3s ease-out;
-  transition: all 0.3s ease;
-}
-
-#reading-app .card:hover {
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-}
-/* ===========================
-   COMPACT LAYOUT STYLES
-   =========================== */
-
-/* Reduce card padding */
-#reading-app .card-header.py-2 {
-  padding: 0.5rem 1rem !important;
-}
-
-#reading-app .card-body.py-2 {
-  padding: 0.5rem 1rem !important;
-}
-
-#reading-app .card-body.py-1 {
-  padding: 0.25rem 1rem !important;
-}
-
-/* Smaller buttons for compact layout */
-#reading-app .btn-sm-compact {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-#reading-app .flex-fill {
-  min-width: 70px; /* Prevent buttons from getting too small */
-}
-
-/* Status indicators compact */
-#reading-app .alert.py-1 {
-  padding-top: 0.25rem !important;
-  padding-bottom: 0.25rem !important;
-  margin-bottom: 0 !important;
-  font-size: 0.85rem;
-}
-
-/* Feedback box compact */
-#reading-app .feedback-box.p-2 {
-  padding: 0.75rem !important;
-}
-
-#reading-app .feedback-box .small {
-  font-size: 0.85rem;
-}
-
-/* Mobile optimizations for compact layout */
-@media (max-width: 576px) {
-  #reading-app .d-flex.flex-wrap.gap-1 {
-    gap: 0.25rem !important;
-  }
-  
-  #reading-app .flex-fill {
-    flex: 1 1 calc(50% - 0.25rem) !important;
-  }
-  
-  /* On very small screens, stack the voice row */
-  #reading-app .row.g-2 .col-md-7,
-  #reading-app .row.g-2 .col-md-5 {
-    width: 100%;
-  }
-  
-  #reading-app .mt-1 {
-    margin-top: 0.25rem !important;
-  }
-}
-
-/* Remove duplicate default voice option from select */
-#voiceSelect option:first-child {
-  font-style: italic;
-}
-/* ===========================
-   RESPONSIVE DESIGN
-   =========================== */
-
-@media (max-width: 768px) {
-  #reading-app .container {
-    padding: 16px;
-    margin: 10px auto;
-  }
-
-  #reading-app h1 {
-    font-size: 1.5rem;
-  }
-
-  #reading-app #lessonText {
-    font-size: 1.1rem;
-    line-height: 1.6;
-  }
-
-  #reading-app .btn {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  #reading-app .flex-fill {
-    flex: 1 1 calc(50% - 8px) !important;
-  }
-
-  #reading-app .card-header h5 {
+/* Comparison View Styles */
+.comparison-view {
     font-size: 1rem;
-  }
+    line-height: 1.6;
 }
 
-@media (max-width: 480px) {
-  #reading-app .flex-fill {
-    flex: 1 1 100% !important;
-  }
+.expected-section, .user-section {
+    border-left: 4px solid;
+}
 
-  #reading-app .row.g-2 {
-    --bs-gutter-y: 0.5rem;
-  }
+.expected-section {
+    border-left-color: #0d6efd;
+}
 
-  #reading-app .col-md-8,
-  #reading-app .col-md-4 {
-    width: 100%;
-  }
+.user-section {
+    border-left-color: #0dcaf0;
+}
 
-  #reading-app .d-flex.justify-content-between {
-    flex-direction: column;
-    gap: 10px;
-    align-items: start !important;
-  }
+/* ============================================================
+   CLASSROOM ERROR MESSAGES (EXISTING)
+   ============================================================ */
 
-  #reading-app .btn-outline-secondary {
-    width: 100%;
-  }
+.classroom-error {
+    background: #fff3f0;
+    border: 2px solid #ff6b6b;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 16px 0;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
 
-  #reading-app .feedback-box {
-    padding: 1rem;
-    font-size: 0.95rem;
-  }
+html[data-bs-theme="dark"] .classroom-error {
+    background: #2d1a1a;
+    border-color: #ff8787;
+}
+
+.classroom-error .error-icon {
+    font-size: 48px;
+    line-height: 1;
+}
+
+.classroom-error .error-content {
+    flex: 1;
+}
+
+.classroom-error .error-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #c92a2a;
+    margin: 0 0 8px 0;
+}
+
+html[data-bs-theme="dark"] .classroom-error .error-title {
+    color: #ff8787;
+}
+
+.classroom-error .error-message {
+    font-size: 1.1rem;
+    color: #495057;
+    margin: 0 0 16px 0;
+}
+
+html[data-bs-theme="dark"] .classroom-error .error-message {
+    color: #dee2e6;
+}
+
+.classroom-error .error-tips {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+.classroom-error .error-tips li {
+    color: #2b8a3e;
+    margin: 8px 0;
+    font-size: 1rem;
+}
+
+html[data-bs-theme="dark"] .classroom-error .error-tips li {
+    color: #69db7e;
+}
+
+.classroom-error .error-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.classroom-error .btn-retry,
+.classroom-error .btn-help {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.classroom-error .btn-retry {
+    background: #ff6b6b;
+    color: white;
+}
+
+.classroom-error .btn-retry:hover {
+    background: #ff5252;
+    transform: scale(1.02);
+}
+
+.classroom-error .btn-help {
+    background: #e9ecef;
+    color: #495057;
+}
+
+html[data-bs-theme="dark"] .classroom-error .btn-help {
+    background: #495057;
+    color: #f8f9fa;
+}
+
+.classroom-error .btn-help:hover {
+    background: #dee2e6;
+    transform: scale(1.02);
 }

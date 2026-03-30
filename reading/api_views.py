@@ -3,175 +3,132 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from difflib import SequenceMatcher
-import re
 
-from .models import ReadingLesson, PronunciationAttempt
+from django.utils import timezone
+
+from reading.services.phonetic_analysis import detect_phonetic_errors
+
+from .models import (
+    ReadingLesson,
+    PronunciationAttempt,
+    LessonProgress,
+)
+
 from .serializers import ReadingLessonSerializer
 
+from .services.pronunciation_engine import (
+    word_by_word_comparison,
+    generate_feedback,
+)
+
 
 # ---------------------------------------------------
-# LESSON LIST & DETAIL
+# LESSON LIST
 # ---------------------------------------------------
+
 class ReadingLessonListAPIView(APIView):
     """Return a list of all reading lessons."""
+
     def get(self, request):
+
         lessons = ReadingLesson.objects.all()
         serializer = ReadingLessonSerializer(lessons, many=True)
+
         return Response(serializer.data)
 
+
+# ---------------------------------------------------
+# LESSON DETAIL
+# ---------------------------------------------------
 
 class ReadingLessonDetailAPIView(APIView):
-    """Return details of a single lesson by ID."""
+    """Return details of a single lesson."""
+
     def get(self, request, pk):
+
         try:
             lesson = ReadingLesson.objects.get(pk=pk)
+
         except ReadingLesson.DoesNotExist:
+
             return Response(
                 {"error": "Lesson not found"},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
+
         serializer = ReadingLessonSerializer(lesson)
+
         return Response(serializer.data)
 
 
 # ---------------------------------------------------
-# HELPER FUNCTIONS FOR PRONUNCIATION ANALYSIS
+# TEXT FEEDBACK API
 # ---------------------------------------------------
-def normalize_text(text):
-    """Remove punctuation and convert to lowercase for comparison."""
-    # Remove punctuation and extra spaces
-    text = re.sub(r'[^\w\s]', '', text.lower())
-    # Remove extra spaces
-    text = ' '.join(text.split())
-    return text
 
-def word_by_word_comparison(expected, spoken):
-    """
-    Compare expected text with spoken text word by word.
-    Returns list of mispronounced words and accuracy score.
-    """
-    # Normalize both texts
-    expected_norm = normalize_text(expected)
-    spoken_norm = normalize_text(spoken)
-    
-    # Split into words
-    expected_words = expected_norm.split()
-    spoken_words = spoken_norm.split()
-    
-    problem_words = []
-    correct_count = 0
-    total_words = len(expected_words)
-    
-    # Use SequenceMatcher for fuzzy matching
-    matcher = SequenceMatcher(None, expected_words, spoken_words)
-    
-    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
-            # Words match exactly
-            correct_count += (i2 - i1)
-            for idx in range(i1, i2):
-                problem_words.append({
-                    'word': expected_words[idx],
-                    'heard': expected_words[idx],
-                    'position': idx,
-                    'status': 'correct'
-                })
-        
-        elif tag == 'replace':
-            # Words don't match
-            for idx in range(i1, i2):
-                heard_word = spoken_words[j1 + (idx - i1)] if (j1 + (idx - i1)) < len(spoken_words) else '[missing]'
-                problem_words.append({
-                    'word': expected_words[idx],
-                    'heard': heard_word,
-                    'position': idx,
-                    'status': 'mispronounced'
-                })
-        
-        elif tag == 'delete':
-            # Expected word missing in spoken
-            for idx in range(i1, i2):
-                problem_words.append({
-                    'word': expected_words[idx],
-                    'heard': '[missing]',
-                    'position': idx,
-                    'status': 'missing'
-                })
-        
-        elif tag == 'insert':
-            # Extra word in spoken (ignore for scoring)
-            pass
-    
-    # Calculate score (percentage of correctly spoken words)
-    score = (correct_count / total_words) * 100 if total_words > 0 else 0
-    
-    return problem_words, round(score, 2)
-
-def generate_feedback(problem_words, score):
-    """Generate human-readable feedback based on analysis."""
-    total_problems = len([w for w in problem_words if w['status'] != 'correct'])
-    
-    if score >= 90:
-        if total_problems == 0:
-            return "🌟 Excellent! Perfect pronunciation. You read every word correctly!"
-        else:
-            return f"🌟 Great job! Just {total_problems} word(s) need a little practice."
-    
-    elif score >= 75:
-        return f"👍 Good effort! Focus on practicing these {total_problems} word(s). Try reading them slowly."
-    
-    elif score >= 50:
-        return f"📝 Keep practicing! You missed {total_problems} word(s). Try listening to the audio and repeating."
-    
-    else:
-        return "🎯 Let's start over. Listen to the audio carefully and try reading one sentence at a time."
-
-
-# ---------------------------------------------------
-# TEXT FEEDBACK - REAL IMPLEMENTATION
-# ---------------------------------------------------
 class TextFeedbackAPIView(APIView):
     """
     Accepts JSON payload:
+
     {
         "expected": "...",
         "spoken": "...",
-        "lesson_id": 3 (optional)
+        "lesson_id": 3
     }
-    Returns real score, feedback, and mispronounced words.
+
+    Returns pronunciation score and feedback.
     """
 
     def post(self, request):
+
         data = request.data
+
         expected = data.get("expected", "").strip()
         spoken = data.get("spoken", "").strip()
         lesson_id = data.get("lesson_id")
-        
+
+        # ---------------------------
+        # VALIDATION
+        # ---------------------------
+
         if not spoken:
+
             return Response(
                 {"score": 0, "feedback": "No speech text received."},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if not expected:
+
             return Response(
-                {"score": 0, "feedback": "No expected text available for comparison."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"score": 0, "feedback": "No expected text available."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
-        # Perform real pronunciation analysis
+
+        # ---------------------------
+        # RUN PRONUNCIATION ANALYSIS
+        # ---------------------------
+
         problem_words, score = word_by_word_comparison(expected, spoken)
+        phonetic_errors = detect_phonetic_errors(problem_words)
+
         feedback_text = generate_feedback(problem_words, score)
-        
-        # Filter to only problematic words for the frontend
-        mispronounced_only = [w for w in problem_words if w['status'] != 'correct']
-        
-        # Save to database if user is authenticated and lesson_id provided
+
+        mispronounced_only = [
+            w for w in problem_words if w["status"] != "correct"
+        ]
+
         attempt_id = None
+
+        # ---------------------------
+        # SAVE ATTEMPT + UPDATE PROGRESS
+        # ---------------------------
+
         if request.user.is_authenticated and lesson_id:
+
             try:
+
                 lesson = ReadingLesson.objects.get(pk=lesson_id)
+
                 attempt = PronunciationAttempt.objects.create(
                     user=request.user,
                     lesson=lesson,
@@ -179,32 +136,69 @@ class TextFeedbackAPIView(APIView):
                     spoken=spoken,
                     score=score,
                     mispronounced=mispronounced_only,
-                    feedback=feedback_text
+                    feedback=feedback_text,
                 )
+
                 attempt_id = attempt.id
+
+                progress, created = LessonProgress.objects.get_or_create(
+                    user=request.user,
+                    lesson=lesson,
+                )
+
+                progress.total_attempts += 1
+
+                if progress.best_score is None or score > progress.best_score:
+                    progress.best_score = score
+
+                if score >= 80:
+                    progress.is_completed = True
+
+                now = timezone.now()
+
+                if not progress.first_attempt_at:
+                    progress.first_attempt_at = now
+
+                progress.last_attempt_at = now
+
+                progress.save()
+
             except ReadingLesson.DoesNotExist:
-                pass  # Don't save if lesson doesn't exist
-        
+                pass
+
+        # ---------------------------
+        # RESPONSE
+        # ---------------------------
+
         return Response(
             {
                 "score": score,
                 "feedback": feedback_text,
                 "mispronounced": mispronounced_only,
+                "phonetic_errors": phonetic_errors,
                 "attempt_id": attempt_id,
                 "word_count": len(expected.split()),
-                "problem_count": len(mispronounced_only)
+                "problem_count": len(mispronounced_only),
             },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OK,
         )
 
 
 # ---------------------------------------------------
-# AUDIO FEEDBACK
+# AUDIO FEEDBACK (FUTURE)
 # ---------------------------------------------------
+
 class AudioFeedbackAPIView(APIView):
-    """Stub endpoint for audio feedback (not yet implemented)."""
+    """Audio pronunciation scoring (future implementation)."""
+
     def post(self, request):
+
         return Response(
-            {"error": "Audio processing temporarily disabled. Use text feedback only for now."},
-            status=status.HTTP_501_NOT_IMPLEMENTED
+            {
+                "error": (
+                    "Audio processing temporarily disabled. "
+                    "Use text feedback for now."
+                )
+            },
+            status=status.HTTP_501_NOT_IMPLEMENTED,
         )

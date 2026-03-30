@@ -1,4 +1,5 @@
 # reading/models.py
+# reading/models.py
 from django.db import models
 from django.conf import settings
 
@@ -121,3 +122,51 @@ class PronunciationAttempt(models.Model):
 
     def __str__(self):
         return f"Attempt {self.id} lesson={self.lesson_id} score={self.score}"
+
+class LessonProgress(models.Model):
+    """
+    Tracks a student's progress on each reading lesson.
+    This model powers both student dashboards and teacher analytics.
+    """
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="reading_progress",
+    )
+
+    lesson = models.ForeignKey(
+        ReadingLesson,
+        on_delete=models.CASCADE,
+        related_name="progress_records",
+    )
+
+    total_attempts = models.PositiveIntegerField(default=0)
+
+    best_score = models.FloatField(null=True, blank=True)
+
+    is_completed = models.BooleanField(default=False)
+
+    first_attempt_at = models.DateTimeField(null=True, blank=True)
+
+    last_attempt_at = models.DateTimeField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "lesson"],
+                name="unique_progress_per_user_per_lesson",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["user", "lesson"]),
+            models.Index(fields=["user", "is_completed"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user} - {self.lesson}"
+    

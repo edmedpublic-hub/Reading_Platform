@@ -15,5 +15,5 @@ urlpatterns = [
     path("attempts/<int:attempt_id>/", views.get_attempt_detail, name="attempt_detail"),
     
     # API endpoints (delegate to api_urls.py)
-    path("api/", include("reading.api_urls")),
+    path("api/", include(("reading.api_urls", "reading_api"), namespace="reading_api")),
 ]
