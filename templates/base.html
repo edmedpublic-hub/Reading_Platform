@@ -3,63 +3,261 @@
 <html lang="en" data-bs-theme="light">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0d6efd">
     <title>{% block title %}Reading Platform{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
     <style>
-      body { transition: background-color 0.25s ease, color 0.25s ease; }
-      .app-brand { font-weight: 700; letter-spacing: 0.5px; }
-      [data-bs-theme="light"] body { background-color: #f8fafc; }
-      [data-bs-theme="dark"] body { background-color: #0f172a; color: #e5e7eb; }
+      body { 
+        transition: background-color 0.25s ease, color 0.25s ease; 
+        font-family: system-ui, -apple-system, 'Inter', 'Segoe UI', Roboto, sans-serif;
+      }
+      
+      .app-brand { 
+        font-weight: 700; 
+        letter-spacing: 0.5px; 
+      }
+      
+      [data-bs-theme="light"] body { 
+        background-color: #f8fafc; 
+      }
+      
+      [data-bs-theme="dark"] body { 
+        background-color: #0f172a; 
+        color: #e5e7eb; 
+      }
+      
+      /* Mobile navigation improvements */
+      @media (max-width: 768px) {
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+        
+        .navbar-nav .nav-link {
+          padding: 0.5rem 1rem;
+        }
+        
+        /* Better touch targets for mobile */
+        .btn {
+          min-height: 44px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        /* Prevent text zoom on input focus (iOS) */
+        select, 
+        input, 
+        textarea,
+        button {
+          font-size: 16px !important;
+        }
+        
+        /* Smooth scrolling for mobile */
+        html {
+          scroll-behavior: smooth;
+        }
+      }
+      
+      /* Safe area insets for notched devices */
+      @supports (padding: max(0px)) {
+        .container {
+          padding-left: max(1rem, env(safe-area-inset-left));
+          padding-right: max(1rem, env(safe-area-inset-right));
+        }
+        
+        body {
+          padding-top: env(safe-area-inset-top);
+          padding-bottom: env(safe-area-inset-bottom);
+        }
+      }
+      
+      /* Loading indicator for async operations */
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+      }
+      
+      .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      
+      /* Toast notification for mobile */
+      .mobile-toast {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.85);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 40px;
+        font-size: 0.85rem;
+        z-index: 1000;
+        backdrop-filter: blur(8px);
+        white-space: nowrap;
+        animation: toastSlideUp 0.3s ease;
+      }
+      
+      @keyframes toastSlideUp {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
+      
+      /* Better focus styles for accessibility */
+      *:focus-visible {
+        outline: 2px solid #0d6efd;
+        outline-offset: 2px;
+      }
+      
+      /* Disable outline on mouse click, keep for keyboard */
+      *:focus:not(:focus-visible) {
+        outline: none;
+      }
     </style>
     {% block extra_css %}{% endblock %}
   </head>
 
   <body class="d-flex flex-column min-vh-100">
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">Skip to main content</a>
 
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4 shadow-sm">
       <div class="container">
-        <a class="navbar-brand app-brand" href="/">Reading Platform</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+        <a class="navbar-brand app-brand" href="/">📖 Reading Platform</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" 
+                aria-label="Toggle navigation" aria-expanded="false">
           <span class="navbar-toggler-icon"></span>
         </button>
 
         <div class="collapse navbar-collapse" id="navContent">
           <ul class="navbar-nav ms-auto">
-            <li class="nav-item"><a class="nav-link" href="/">Library</a></li>
-            <li class="nav-item"><a class="nav-link" href="#">Progress</a></li>
-            <li class="nav-item ms-3">
-              <button id="theme-toggle" class="btn btn-outline-light btn-sm" type="button">Dark Mode</button>
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="bi bi-journal-bookmark-fill"></i> Library
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'reading:analytics_dashboard' %}">
+                <i class="bi bi-graph-up"></i> My Progress
+              </a>
+            </li>
+            <li class="nav-item ms-2">
+              <button id="theme-toggle" class="btn btn-outline-light btn-sm" type="button" aria-label="Toggle dark mode">
+                <i class="bi bi-moon-stars-fill"></i> <span id="theme-text">Dark Mode</span>
+              </button>
             </li>
           </ul>
         </div>
       </div>
     </nav>
 
-    <main class="container mb-5 flex-grow-1">
+    <main id="main-content" class="container mb-5 flex-grow-1" tabindex="-1">
       {% block content %}{% endblock %}
     </main>
 
-    <footer class="py-3 mt-auto text-center border-top">
-      <small class="text-muted">&copy; {% now "Y" %} Reading Platform Portfolio Project</small>
+    <footer class="py-3 mt-auto text-center border-top bg-light-subtle">
+      <div class="container">
+        <small class="text-muted">
+          &copy; {% now "Y" %} Reading Platform | 
+          <span id="device-info" class="d-none d-sm-inline">📱 Practice your pronunciation</span>
+        </small>
+      </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
       (function () {
+        // Theme management
         const root = document.documentElement;
         const toggleBtn = document.getElementById("theme-toggle");
+        const themeText = document.getElementById("theme-text");
         const saved = localStorage.getItem("theme");
-        if (saved === "dark") { root.setAttribute("data-bs-theme", "dark"); toggleBtn.textContent = "Light Mode"; }
-        toggleBtn.addEventListener("click", function () {
+        
+        if (saved === "dark") { 
+          root.setAttribute("data-bs-theme", "dark"); 
+          if (themeText) themeText.textContent = "Light Mode";
+        }
+        
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", function () {
             const current = root.getAttribute("data-bs-theme");
             const next = current === "dark" ? "light" : "dark";
             root.setAttribute("data-bs-theme", next);
             localStorage.setItem("theme", next);
-            toggleBtn.textContent = next === "dark" ? "Light Mode" : "Dark Mode";
+            if (themeText) {
+              themeText.textContent = next === "dark" ? "Light Mode" : "Dark Mode";
+            }
+          });
+        }
+        
+        // Mobile detection for additional UI hints
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+          document.body.classList.add('is-mobile');
+          // Add mobile hint for better UX
+          const footer = document.querySelector('footer small');
+          if (footer) {
+            footer.innerHTML = '&copy; {% now "Y" %} Reading Platform | 📱 Tap to practice pronunciation';
+          }
+        }
+        
+        // Simple toast notification helper
+        window.showToast = function(message, duration = 3000) {
+          const existingToast = document.querySelector('.mobile-toast');
+          if (existingToast) existingToast.remove();
+          
+          const toast = document.createElement('div');
+          toast.className = 'mobile-toast';
+          toast.textContent = message;
+          document.body.appendChild(toast);
+          
+          setTimeout(() => {
+            toast.remove();
+          }, duration);
+        };
+        
+        // Handle offline status
+        window.addEventListener('online', () => {
+          if (window.showToast) showToast('🟢 You are back online', 2000);
         });
+        
+        window.addEventListener('offline', () => {
+          if (window.showToast) showToast('🔴 You are offline. Some features may be limited.', 3000);
+        });
+        
+        // Log device info for debugging (optional)
+        console.log('Device:', isMobile ? 'Mobile' : 'Desktop', 
+                    '| Theme:', root.getAttribute('data-bs-theme'));
       })();
     </script>
     {% block extra_js %}{% endblock %}

@@ -57,7 +57,6 @@ export function initVoiceSelector(selectElement, options = {}) {
 
     // Listen for voices changed event (async loading)
     window.speechSynthesis.onvoiceschanged = () => {
-        console.log('Voices changed event triggered');
         loadVoices();
     };
 }
@@ -70,8 +69,6 @@ function handleNoSupport() {
     
     voiceSelectElement.disabled = true;
     voiceSelectElement.innerHTML = '<option>Speech not supported</option>';
-    
-    // Add error class for styling
     voiceSelectElement.classList.add('voice-select-error');
 }
 
@@ -98,7 +95,6 @@ export function loadVoices() {
         setTimeout(loadVoices, 200);
     } else if (!voicesLoaded) {
         voicesLoaded = true;
-        
         // Try to restore saved preference
         restoreSavedVoice();
     }
@@ -149,7 +145,7 @@ function populateVoiceSelect() {
     // Add default option
     const defaultOpt = document.createElement('option');
     defaultOpt.value = '';
-    defaultOpt.textContent = '📢 Default Voice';
+    defaultOpt.textContent = '📢 Default Voice (Auto)';
     voiceSelectElement.appendChild(defaultOpt);
     
     // Group voices by language
@@ -160,14 +156,14 @@ function populateVoiceSelect() {
         voicesByLang[lang].push({ voice, index });
     });
     
-    // Add English voices first
-    if (voicesByLang['en']) {
-        addVoiceGroup('🇬🇧 English Voices', voicesByLang['en']);
-    }
-    
-    // Add Arabic voices
+    // Add Arabic voices first (since they are most important for this app)
     if (voicesByLang['ar']) {
         addVoiceGroup('🇸🇦 Arabic Voices', voicesByLang['ar']);
+    }
+    
+    // Add English voices
+    if (voicesByLang['en']) {
+        addVoiceGroup('🇬🇧 English Voices', voicesByLang['en']);
     }
     
     // Add other languages in alphabetical order
@@ -312,20 +308,41 @@ export function findEnglishVoice() {
 }
 
 /**
- * Find best voice for text
- * @param {string} text - Text to speak
+ * Find the best voice for given text
+ * @param {string} text - Text to be spoken
  * @returns {SpeechSynthesisVoice|null} Best matching voice
  */
-export function findVoiceForText(text) {
-    if (!text) return null;
+export function findBestVoiceForText(text) {
+    if (!text || !voices.length) return null;
     
-    if (hasArabic(text)) {
-        return findArabicVoice() || voices[0] || null;
-    } else if (hasEnglish(text)) {
-        return findEnglishVoice() || voices[0] || null;
+    const hasArabicChars = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(text);
+    
+    if (hasArabicChars) {
+        // First try to find a dedicated Arabic voice
+        const arabicVoice = findArabicVoice();
+        if (arabicVoice) return arabicVoice;
+        
+        // Fallback to any voice that supports Arabic (by name)
+        const arabicSupportingVoice = voices.find(v => 
+            v.lang.startsWith('ar') || 
+            v.name.toLowerCase().includes('arabic')
+        );
+        if (arabicSupportingVoice) return arabicSupportingVoice;
     }
     
-    return voices[0] || null;
+    // Check if user selected a specific voice
+    const selectedVoice = getSelectedVoice();
+    if (selectedVoice) return selectedVoice;
+    
+    // Default to English voice
+    return findEnglishVoice();
+}
+
+/**
+ * Find best voice for text (legacy alias)
+ */
+export function findVoiceForText(text) {
+    return findBestVoiceForText(text);
 }
 
 /**
@@ -398,6 +415,7 @@ export default {
     getVoices,
     findArabicVoice,
     findEnglishVoice,
+    findBestVoiceForText,
     findVoiceForText,
     resetToDefault,
     areVoicesLoaded

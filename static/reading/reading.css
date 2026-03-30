@@ -1,10 +1,12 @@
 /* ============================================================
-   READING APP — FINAL PRODUCTION CSS
-   Fixed: Arabic Ligatures, English Spacing, & Container Height
+   READING APP — PRODUCTION CSS
    ============================================================ */
 
+/* --------------------------------------------
+   1. VARIABLES & RESET
+-------------------------------------------- */
+
 #reading-app {
-    /* 1. Reset & Variables */
     --primary-indigo: #4f46e5;
     --slate-800: #1e293b;
     --slate-500: #64748b;
@@ -16,45 +18,46 @@
     color: var(--slate-800);
 }
 
-/* 2. THE TEXT AREA (CRITICAL FIXES) */
+/* --------------------------------------------
+   2. TEXT AREA
+-------------------------------------------- */
+
 #reading-app #lessonText {
-    /* Fix: Reset any inherited stretching from previous CSS */
-    letter-spacing: normal !important; 
+    letter-spacing: normal !important;
     word-spacing: normal !important;
     text-align: left !important;
     text-justify: none !important;
-
-    /* Fix: Vertical Spacing & Height */
-    line-height: 2 !important; /* Increased for readability */
+    line-height: 2 !important;
     padding: 3rem !important;
-    min-height: 450px; /* Ensures enough space for 300 students to see clearly */
-    
-    /* Elegant Box */
+    min-height: 450px;
     background: #ffffff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
     box-shadow: var(--card-shadow);
 }
 
-/* 3. ARABIC TEXT PROTECTION (THE "HORRIBLE" TEXT FIX) */
-/* This prevents Arabic characters from being spaced out like English */
-#reading-app #lessonText span:contains("{"), 
-#reading-app #lessonText span:contains("}"),
+/* --------------------------------------------
+   3. ARABIC TEXT PROTECTION
+-------------------------------------------- */
+
 #reading-app [lang="ar"],
 .arabic-text {
     font-family: 'Amiri', 'Traditional Arabic', 'Noto Naskh Arabic', serif !important;
     letter-spacing: 0 !important;
     word-spacing: 0 !important;
-    font-size: 1.2em; /* Arabic often needs to be slightly larger to be legible */
+    font-size: 1.2em;
     line-height: 1.2 !important;
     display: inline-block;
     direction: rtl;
     padding: 0 4px;
 }
 
-/* 4. SENTENCE & WORD INTERACTIVITY */
+/* --------------------------------------------
+   4. SENTENCE & WORD INTERACTIVITY
+-------------------------------------------- */
+
 #reading-app .reading-sentence {
-    display: inline; /* Keep flowing like a book */
+    display: inline;
     padding: 4px 0;
     border-radius: 4px;
     transition: background 0.2s ease;
@@ -69,11 +72,13 @@
     display: inline-block;
     padding: 0 1px;
     margin: 0;
-    /* Ensure words don't fly apart */
-    letter-spacing: -0.01em !important; 
+    letter-spacing: -0.01em !important;
 }
 
-/* 5. SIDEBAR & DASHBOARD REFINEMENT */
+/* --------------------------------------------
+   5. SIDEBAR & DASHBOARD
+-------------------------------------------- */
+
 #reading-app .sidebar-card {
     border: none;
     border-radius: 12px;
@@ -91,7 +96,10 @@
     padding: 12px 16px !important;
 }
 
-/* 6. BUTTONS */
+/* --------------------------------------------
+   6. BUTTONS
+-------------------------------------------- */
+
 #reading-app .btn {
     border-radius: 8px;
     font-weight: 600;
@@ -99,10 +107,21 @@
     transition: all 0.2s ease;
 }
 
-#reading-app .btn-success { background: #10b981 !important; border: none; }
-#reading-app .btn-warning { background: #f59e0b !important; border: none; color: white !important; }
+#reading-app .btn-success {
+    background: #10b981 !important;
+    border: none;
+}
 
-/* 7. PROGRESS BAR */
+#reading-app .btn-warning {
+    background: #f59e0b !important;
+    border: none;
+    color: white !important;
+}
+
+/* --------------------------------------------
+   7. PROGRESS BAR
+-------------------------------------------- */
+
 #reading-app .progress {
     height: 10px;
     border-radius: 20px;
@@ -110,11 +129,11 @@
     margin-bottom: 2rem;
 }
 
-/* ============================================================
-   PRONUNCIATION FEEDBACK STYLES (NEW)
-   ============================================================ */
+/* --------------------------------------------
+   8. PRONUNCIATION FEEDBACK
+-------------------------------------------- */
 
-/* Score Display Container */
+/* Score Display */
 #scoreDisplayContainer {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-radius: 12px;
@@ -161,14 +180,13 @@
     border-left: 4px solid #667eea;
 }
 
-/* Problem Words Container */
+/* Problem Words */
 .problem-words-container .badge {
     font-size: 0.9rem;
     padding: 6px 12px;
     margin: 4px;
 }
 
-/* Problem Word Highlight */
 .problem-word-highlight {
     background-color: #ffeb3b;
     color: #d32f2f;
@@ -180,7 +198,19 @@
     text-decoration-thickness: 2px;
 }
 
-/* Expected Text and User Transcript Styles */
+/* Comparison View */
+.comparison-view {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.expected-section, .user-section {
+    border-left: 4px solid;
+}
+
+.expected-section { border-left-color: #0d6efd; }
+.user-section { border-left-color: #0dcaf0; }
+
 .expected-text {
     background-color: #f5f5f5;
     padding: 10px;
@@ -193,16 +223,6 @@
     padding: 10px;
     border-radius: 8px;
     line-height: 1.6;
-}
-
-/* Pronunciation Feedback Animation */
-.pronunciation-feedback {
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Live Transcript */
@@ -235,27 +255,19 @@
     100% { opacity: 1; }
 }
 
-/* Comparison View Styles */
-.comparison-view {
-    font-size: 1rem;
-    line-height: 1.6;
+/* Animations */
+.pronunciation-feedback {
+    animation: fadeIn 0.3s ease;
 }
 
-.expected-section, .user-section {
-    border-left: 4px solid;
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.expected-section {
-    border-left-color: #0d6efd;
-}
-
-.user-section {
-    border-left-color: #0dcaf0;
-}
-
-/* ============================================================
-   CLASSROOM ERROR MESSAGES (EXISTING)
-   ============================================================ */
+/* --------------------------------------------
+   9. ERROR MESSAGES
+-------------------------------------------- */
 
 .classroom-error {
     background: #fff3f0;
@@ -279,9 +291,7 @@ html[data-bs-theme="dark"] .classroom-error {
     line-height: 1;
 }
 
-.classroom-error .error-content {
-    flex: 1;
-}
+.classroom-error .error-content { flex: 1; }
 
 .classroom-error .error-title {
     font-size: 1.4rem;
@@ -290,9 +300,7 @@ html[data-bs-theme="dark"] .classroom-error {
     margin: 0 0 8px 0;
 }
 
-html[data-bs-theme="dark"] .classroom-error .error-title {
-    color: #ff8787;
-}
+html[data-bs-theme="dark"] .classroom-error .error-title { color: #ff8787; }
 
 .classroom-error .error-message {
     font-size: 1.1rem;
@@ -300,9 +308,7 @@ html[data-bs-theme="dark"] .classroom-error .error-title {
     margin: 0 0 16px 0;
 }
 
-html[data-bs-theme="dark"] .classroom-error .error-message {
-    color: #dee2e6;
-}
+html[data-bs-theme="dark"] .classroom-error .error-message { color: #dee2e6; }
 
 .classroom-error .error-tips {
     list-style: none;
@@ -316,9 +322,7 @@ html[data-bs-theme="dark"] .classroom-error .error-message {
     font-size: 1rem;
 }
 
-html[data-bs-theme="dark"] .classroom-error .error-tips li {
-    color: #69db7e;
-}
+html[data-bs-theme="dark"] .classroom-error .error-tips li { color: #69db7e; }
 
 .classroom-error .error-actions {
     display: flex;
@@ -359,4 +363,194 @@ html[data-bs-theme="dark"] .classroom-error .btn-help {
 .classroom-error .btn-help:hover {
     background: #dee2e6;
     transform: scale(1.02);
+}
+
+/* --------------------------------------------
+   10. MOBILE OPTIMIZATION
+-------------------------------------------- */
+
+/* Responsive Typography */
+html {
+    font-size: 16px;
+}
+
+@media (max-width: 768px) { html { font-size: 14px; } }
+@media (max-width: 480px) { html { font-size: 13px; } }
+
+/* Prevent zoom on input focus (iOS) */
+@media (max-width: 768px) {
+    select, button { font-size: 16px !important; }
+}
+
+/* Main Mobile Breakpoints */
+@media (max-width: 768px) {
+    #reading-app { padding: 0.75rem !important; }
+    
+    #reading-app #lessonText {
+        padding: 1.5rem !important;
+        font-size: 1.1rem !important;
+        line-height: 1.8 !important;
+        min-height: 350px;
+    }
+    
+    #lessonTitle {
+        font-size: 1.5rem !important;
+        margin-bottom: 0.75rem !important;
+    }
+    
+    #reading-app .btn {
+        padding: 12px 16px !important;
+        font-size: 0.9rem !important;
+        min-height: 44px;
+    }
+    
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        width: 100%;
+        border-radius: 8px !important;
+    }
+    
+    .sidebar-card { margin-bottom: 1rem !important; }
+    .feedback-section { margin-top: 1rem; }
+    #scoreDisplay { font-size: 2rem !important; }
+    #scoreDisplayContainer { padding: 12px !important; }
+    
+    .comparison-view .expected-section,
+    .comparison-view .user-section {
+        font-size: 0.9rem;
+        padding: 8px !important;
+        margin-bottom: 12px;
+    }
+    
+    .problem-words-container .badge {
+        font-size: 0.8rem !important;
+        padding: 6px 10px !important;
+        margin: 4px !important;
+    }
+    
+    .progress {
+        height: 8px !important;
+        margin-bottom: 1rem !important;
+    }
+    
+    #voiceSelect {
+        font-size: 0.9rem;
+        padding: 10px;
+    }
+    
+    #recording-status {
+        font-size: 0.8rem;
+        padding: 8px;
+        margin-top: 12px;
+    }
+    
+    .live-transcript {
+        font-size: 0.8rem;
+        padding: 8px;
+    }
+    
+    .processing-indicator { padding: 10px !important; }
+    .processing-text { font-size: 0.85rem; }
+    
+    .lesson-content {
+        user-select: text;
+        -webkit-user-select: text;
+    }
+}
+
+/* Small Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+    #reading-app #lessonText {
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        line-height: 1.6 !important;
+        min-height: 300px;
+    }
+    
+    #scoreDisplay { font-size: 1.8rem !important; }
+    
+    .status-label {
+        font-size: 0.65rem !important;
+        padding: 8px 12px !important;
+    }
+    
+    .card-body { padding: 1rem !important; }
+    .breadcrumb { font-size: 0.85rem; }
+}
+
+/* Landscape Mode */
+@media (max-width: 768px) and (orientation: landscape) {
+    #reading-app #lessonText {
+        min-height: 250px;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .sidebar-card { margin-bottom: 0.75rem !important; }
+}
+
+/* Touch-Friendly */
+@media (hover: none) and (pointer: coarse) {
+    .btn:active {
+        transform: scale(0.98);
+        transition: transform 0.05s ease;
+    }
+    
+    .btn:hover { transform: none; }
+    
+    #lessonText {
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Mobile Recording Status */
+@media (max-width: 768px) {
+    #recording-status.recording-mobile {
+        background: #dc3545;
+        color: white;
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+        min-width: 200px;
+        text-align: center;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+    
+    .loading-container {
+        position: relative;
+        min-height: 100px;
+    }
+    
+    .loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    
+    .loading-active {
+        opacity: 0.6;
+        pointer-events: none;
+    }
 }

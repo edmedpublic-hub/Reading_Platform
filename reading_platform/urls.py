@@ -1,17 +1,15 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.shortcuts import render
-from . import views
-
-
-
-def home(request):
-    return render(request, "index.html")
-
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("", home, name="home"),
-    path("reading/", include(("reading.urls", "reading"), namespace="reading")),
-    path('accounts/check-auth/', views.check_auth, name='check_auth'),
+    path('admin/', admin.site.urls),
+    path('', include('reading.urls')),  # This includes analytics/ path
+    path('accounts/', include('django.contrib.auth.urls')),
 ]
+
+# Serve static files only in debug mode, but they shouldn't conflict
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

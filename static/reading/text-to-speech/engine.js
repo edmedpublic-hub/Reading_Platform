@@ -1,7 +1,7 @@
 // static/reading/text-to-speech/engine.js
 // PURPOSE: Core speech synthesis engine with consistent state management
 
-import { getSelectedVoice, findArabicVoice, areVoicesLoaded } from './components/voice-selector.js';
+import { getSelectedVoice, findArabicVoice, findBestVoiceForText, areVoicesLoaded } from './components/voice-selector.js';
 import { hasArabic, isMobile } from './utils/tts-utils.js';
 
 let synth = null;
@@ -63,26 +63,22 @@ export function initEngine(options = {}) {
 
 export async function createUtterance(text) {
     const utterance = new SpeechSynthesisUtterance(text);
-
-    const arabic = hasArabic(text);
-
-    if (arabic) {
-        utterance.lang = 'ar-SA';
-        const arabicVoice = findArabicVoice();
-        if (arabicVoice) {
-            utterance.voice = arabicVoice;
-        } else {
-            const voices = synth.getVoices();
-            const anyArabicVoice = voices.find(v => v.lang.startsWith('ar'));
-            if (anyArabicVoice) {
-                utterance.voice = anyArabicVoice;
-            } else {
-                const selectedVoice = getSelectedVoice();
-                if (selectedVoice) utterance.voice = selectedVoice;
-            }
-        }
+    
+    // Find the best voice for the text
+    const bestVoice = findBestVoiceForText(text);
+    
+    if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang;
     } else {
-        utterance.lang = config.lang;
+        // Fallback to language detection
+        const arabic = hasArabic(text);
+        if (arabic) {
+            utterance.lang = 'ar-SA';
+        } else {
+            utterance.lang = config.lang;
+        }
+        
         const selectedVoice = getSelectedVoice();
         if (selectedVoice) utterance.voice = selectedVoice;
     }

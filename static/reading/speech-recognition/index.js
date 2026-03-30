@@ -59,14 +59,14 @@ let elementIds = {
 let callbacks = {};
 let config = {
     lang: 'en-US',
-    continuous: true,
+    continuous: true,           // Keep listening continuously
     interimResults: true,
     maxAlternatives: 3,
-    silenceTimeout: 1800,
+    silenceTimeout: 0,          // Disabled - no auto-stop on silence
     minSpeechLength: 10,
     showVisualizer: false,
     audioThreshold: 10,
-    analyzeOnStop: true
+    analyzeOnStop: true         // Only analyze when Stop button is clicked
 };
 
 let elements = {};
@@ -77,8 +77,6 @@ let elements = {};
 
 export function init(options = {}) {
     if (initialized) return getPublicAPI();
-
-    
 
     // SYNCED: Handle both nested and direct options from ModuleLoader
     if (options.startBtn) elementIds.startBtn = options.startBtn;
@@ -164,12 +162,10 @@ export function init(options = {}) {
             // Store the current sentence for comparison
             currentSentence = sentence;
             setExpectedText(sentence);
-            
         }
     });
 
     initialized = true;
-   
 
     return getPublicAPI();
 }
@@ -211,6 +207,16 @@ function setupButtonListeners() {
 
 export async function startListening() {
     if (_isListening) return true;
+    
+    // Mobile detection
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Mobile: Show permission request instructions on first attempt
+    if (isMobile && !localStorage.getItem('microphone-prompt-shown')) {
+        showStatus('🎤 Tap "Allow" when prompted for microphone access', 'info');
+        localStorage.setItem('microphone-prompt-shown', 'true');
+    }
+    
     try {
         await requestMicrophone({
             enableVisualizer: config.showVisualizer,
@@ -223,20 +229,57 @@ export async function startListening() {
         start();
         _isListening = true;
         updateUI(true);
+        
+        // Mobile: Show recording indicator
+        if (isMobile && elements.status) {
+            elements.status.classList.add('recording-mobile');
+        }
+        
         return true;
     } catch (error) {
         console.error('STT Start failed', error);
-        handleRecognitionError({ error: 'service-not-allowed' });
+        
+        // Mobile-specific error messages
+        if (isMobile) {
+            if (error.message === 'Permission denied' || error.name === 'NotAllowedError') {
+                showStatus('🎤 Microphone access denied. Please check browser settings and allow microphone.', 'error');
+                setTimeout(() => {
+                    showStatus('💡 Tip: Tap the camera/mic icon in the address bar to allow access', 'info');
+                }, 3000);
+            } else if (error.name === 'NotFoundError') {
+                showStatus('🎤 No microphone found on this device.', 'error');
+            } else if (error.name === 'NotReadableError') {
+                showStatus('🎤 Microphone is in use by another application.', 'error');
+            } else {
+                showStatus('🎤 Microphone not available. Please check your device settings.', 'error');
+            }
+        } else {
+            handleRecognitionError({ error: 'service-not-allowed' });
+        }
+        
         return false;
     }
 }
 
 export function stopListening() {
     if (!_isListening) return;
+    
+    // Stop recognition
     stop();
     _isListening = false;
     updateUI(false);
     clearSilenceTimer();
+    
+    // Get final transcript and analyze
+    const transcriptObj = getTranscript(false);
+    const finalTranscript = transcriptObj.final || transcriptObj.full || transcriptObj.interim || '';
+    
+    // Only analyze when Stop button is clicked
+    if (config.analyzeOnStop && finalTranscript.length >= config.minSpeechLength) {
+        analyzeAndDisplayFeedback(finalTranscript);
+    } else if (finalTranscript.length < config.minSpeechLength) {
+        showStatus('No speech detected. Please try again.', 'error');
+    }
 }
 
 /* ---------------------------------------------------- */
@@ -256,35 +299,16 @@ function handleSpeechEnd() {
 }
 
 function handleRecognitionStart() {
-    
     updateUI(true);
 }
 
 function handleRecognitionEnd() {
-    
+    // Recognition ended (could be from error or external stop)
+    // We don't auto-analyze here anymore - analysis is done in stopListening
     _isListening = false;
     updateUI(false);
     
-    const transcriptObj = getTranscript(false);
-    
-    
-    // Get the final transcript string
-    const finalTranscript = transcriptObj.final || transcriptObj.full || transcriptObj.interim || '';
-    
-    
-    if (config.analyzeOnStop && finalTranscript.length >= config.minSpeechLength) {
-        
-        analyzeAndDisplayFeedback(finalTranscript);
-    } else {
-        
-        if (finalTranscript.length < config.minSpeechLength) {
-            
-        }
-        // Show a message to the user
-        showStatus('No speech detected. Please try again.', 'error');
-    }
-    
-    EventBus.emit('recognition:end', { transcript: finalTranscript });
+    EventBus.emit('recognition:end', { transcript: getTranscript(false) });
 }
 
 function handleRecognitionError(event) {
@@ -294,38 +318,44 @@ function handleRecognitionError(event) {
 }
 
 function handleRecognitionResult(result) {
-    
     dispatchEvent('speech-interim', {
         transcript: result.transcript,
         interim: result.interim,
         final: result.final
     });
     
-    // If it's final, log it clearly
-    if (result.final) {
-        
+    // Show live transcript for better UX
+    if (result.transcript && elements.status) {
+        const shortTranscript = result.transcript.length > 60 
+            ? result.transcript.substring(0, 60) + '...' 
+            : result.transcript;
+        showStatus(`🎤 Listening: "${shortTranscript}"`, 'speech');
     }
 }
 
 function handleSilenceTimeout() {
-    if (_isListening) stopListening();
+    // Silence detected - just reset the detector, don't stop listening
+    resetDetector();
+    // Optionally show a subtle indicator
+    if (elements.status && _isListening) {
+        // Briefly flash to indicate silence detected but still listening
+        elements.status.style.opacity = '0.7';
+        setTimeout(() => {
+            if (elements.status) elements.status.style.opacity = '1';
+        }, 200);
+    }
 }
 
 function analyzeAndDisplayFeedback(transcript) {
-    
-    
     // Use the stored current sentence
     const sentenceToCompare = currentSentence || expectedText;
     
-    
     if (!transcript || transcript.length === 0) {
-        
         showStatus('No speech detected. Please try again.', 'error');
         return;
     }
     
     if (!sentenceToCompare || sentenceToCompare.length === 0) {
-        
         showStatus('Please wait for TTS to start reading before speaking.', 'info');
         return;
     }
@@ -368,9 +398,9 @@ function analyzeAndDisplayFeedback(transcript) {
             totalWords: totalWords,
             accuracy: score
         };
-        
 
         // Dispatch event for UI to handle
+        console.log('📡 Dispatching pronunciation-feedback event with:', feedbackData);
         document.dispatchEvent(new CustomEvent('pronunciation-feedback', {
             detail: feedbackData
         }));
@@ -405,7 +435,7 @@ function updateUI(active) {
     if (elements.stopBtn) elements.stopBtn.disabled = !active;
 
     if (active) {
-        showStatus('🎤 Listening...', 'speech');
+        showStatus('🎤 Listening... Speak clearly', 'speech');
     } else {
         if (elements.status) elements.status.classList.add('d-none');
     }

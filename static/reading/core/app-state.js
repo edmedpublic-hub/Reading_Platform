@@ -77,7 +77,7 @@ let _state = {
             '/reading/lessons/{id}/',
             '/api/lessons/{id}/'
         ],
-        feedback: '/reading/api/feedback/'
+        feedback: '/api/feedback/'
     },
 
     config: {

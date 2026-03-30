@@ -11,6 +11,7 @@ import speech_recognition as sr
 import os
 import json
 
+
 from django.shortcuts import render
 from .models import Book
 
@@ -53,16 +54,7 @@ class ReadingLessonDetailView(generics.RetrieveAPIView):
     lookup_field = "pk"
 
 
-# --- Template views (updated) ---
-#def reading_home(request):
-    """
-    Render the lesson list page.
-    Lessons are passed to the template for optional server-side rendering.
-    """
-    #lessons = ReadingLesson.objects.all().only("id", "title")
-    #return render(request, "reading/reading.html", {"lessons": lessons})
-
-
+# --- Template views ---
 def lesson_detail(request, pk):
     """
     Render a single lesson detail page.
@@ -83,6 +75,16 @@ def lesson_detail(request, pk):
         "previous_attempts": previous_attempts
     }
     return render(request, "reading/lesson_detail.html", context)
+
+
+# --- Analytics Dashboard View ---
+@login_required
+def analytics_dashboard(request):
+    """
+    Render analytics dashboard for the logged-in user.
+    Displays pronunciation statistics, weak words, and progress charts.
+    """
+    return render(request, "reading/analytics_dashboard.html")
 
 
 # --- NEW: Recording processing view ---
@@ -237,7 +239,7 @@ def analyze_pronunciation(expected, spoken):
     }
 
 
-# --- NEW: View to fetch previous attempt details ---
+# --- View to fetch previous attempt details ---
 @login_required
 def get_attempt_detail(request, attempt_id):
     """

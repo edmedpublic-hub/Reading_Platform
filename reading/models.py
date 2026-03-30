@@ -1,7 +1,8 @@
 # reading/models.py
-# reading/models.py
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
+from django.db.models import F, Avg
 
 
 class BookCategory(models.Model):
@@ -65,7 +66,7 @@ class ReadingLesson(models.Model):
         Unit,
         on_delete=models.CASCADE,
         related_name="lessons",
-        null=True,   # keep nullable for now to avoid migration issues
+        null=True,
         blank=True,
     )
     content = models.TextField()
@@ -106,11 +107,11 @@ class PronunciationAttempt(models.Model):
         on_delete=models.SET_NULL,
         related_name="pron_attempts",
     )
-    expected = models.TextField()               # full lesson text
-    spoken = models.TextField()                 # student's captured transcript
-    score = models.FloatField(null=True, blank=True)  # percentage 0-100
-    mispronounced = models.JSONField(default=list, blank=True)  # list of words flagged
-    feedback = models.TextField(blank=True)     # human-friendly textual feedback
+    expected = models.TextField()
+    spoken = models.TextField()
+    score = models.FloatField(null=True, blank=True)
+    mispronounced = models.JSONField(default=list, blank=True)
+    feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
@@ -123,36 +124,27 @@ class PronunciationAttempt(models.Model):
     def __str__(self):
         return f"Attempt {self.id} lesson={self.lesson_id} score={self.score}"
 
+
 class LessonProgress(models.Model):
     """
     Tracks a student's progress on each reading lesson.
-    This model powers both student dashboards and teacher analytics.
     """
-
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="reading_progress",
     )
-
     lesson = models.ForeignKey(
         ReadingLesson,
         on_delete=models.CASCADE,
         related_name="progress_records",
     )
-
     total_attempts = models.PositiveIntegerField(default=0)
-
     best_score = models.FloatField(null=True, blank=True)
-
     is_completed = models.BooleanField(default=False)
-
     first_attempt_at = models.DateTimeField(null=True, blank=True)
-
     last_attempt_at = models.DateTimeField(null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True)
-
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -169,4 +161,66 @@ class LessonProgress(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.lesson}"
-    
+
+
+class WordAnalytics(models.Model):
+    """Track performance on individual words"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='word_analytics'
+    )
+    word = models.CharField(max_length=255)
+    lesson = models.ForeignKey(
+        ReadingLesson,
+        on_delete=models.CASCADE,
+        related_name='word_stats',
+        null=True,
+        blank=True
+    )
+    total_attempts = models.PositiveIntegerField(default=0)
+    correct_attempts = models.PositiveIntegerField(default=0)
+    last_attempt_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'word', 'lesson']
+        ordering = ['-total_attempts']
+        indexes = [
+            models.Index(fields=['user', 'word']),
+            models.Index(fields=['user', '-total_attempts']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.word}: {self.correct_attempts}/{self.total_attempts}"
+
+    def success_rate(self):
+        """Calculate success rate percentage"""
+        if self.total_attempts == 0:
+            return 0
+        return round((self.correct_attempts / self.total_attempts) * 100, 1)
+
+
+class UserAnalytics(models.Model):
+    """Track user analytics over time"""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='analytics'
+    )
+    date = models.DateField(auto_now_add=True)
+    total_attempts = models.PositiveIntegerField(default=0)
+    avg_score = models.FloatField(default=0)
+    lessons_completed = models.PositiveIntegerField(default=0)
+    total_practice_time = models.PositiveIntegerField(default=0)
+    words_practiced = models.JSONField(default=list)
+
+    class Meta:
+        unique_together = ['user', 'date']
+        ordering = ['-date']
+        indexes = [
+            models.Index(fields=['user', 'date']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} - {self.date}"

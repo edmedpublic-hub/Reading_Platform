@@ -124,6 +124,9 @@ function getScoreClassLocal(score) {
  * @param {Object} feedback - Feedback object from analysis
  */
 export function displayPronunciationFeedback(feedback) {
+    console.log('📢 displayPronunciationFeedback called with:', feedback);
+    console.log('Score:', feedback.score);
+    
     const { transcript, expected, score, problemWords, correctWords, totalWords } = feedback;
     
     // Handle problemWords - it might be an array of objects or strings
@@ -254,8 +257,13 @@ export function displayPronunciationFeedback(feedback) {
     if (score !== undefined && score !== null) {
         announceToScreenReader(`Pronunciation score: ${displayScore} percent. ${problemWordsArray.length > 0 ? `Practice these words: ${problemWordsArray.join(', ')}` : 'Excellent work!'}`);
     }
+    
+    // Save progress to backend after displaying feedback
+    if (score !== undefined && score !== null) {
+        console.log('💾 Calling saveProgressToBackend with score:', displayScore);
+        saveProgressToBackend(feedback);
+    }
 }
-
 /**
  * Show recording status
  * @param {boolean} isRecording - Whether recording is active
@@ -333,8 +341,79 @@ function debounce(func, wait) {
 
 // Listen for pronunciation feedback events
 document.addEventListener('pronunciation-feedback', (event) => {
+    console.log('🎤 pronunciation-feedback event received:', event.detail);
     displayPronunciationFeedback(event.detail);
 });
+// static/reading/ui/index.js
+// Add this after the imports
+
+/**
+ * Get CSRF token from cookies
+ */
+function getCsrfToken() {
+    const name = 'csrftoken';
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='))
+        ?.split('=')[1];
+    return cookieValue || '';
+}
+
+/**
+ * Save pronunciation progress using existing TextFeedbackAPIView
+ */
+async function saveProgressToBackend(feedback) {
+    const lessonId = document.getElementById('reading-app')?.dataset.lessonId;
+    if (!lessonId) return;
+    
+    // Check if user is authenticated
+    const userId = document.getElementById('reading-app')?.dataset.userId;
+    if (!userId) {
+        console.log('User not logged in, progress not saved');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/feedback/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                expected: feedback.expected,
+                spoken: feedback.transcript,
+                lesson_id: parseInt(lessonId)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.score !== undefined) {
+            console.log('Progress saved - Score:', data.score);
+            
+            // Update best score display if element exists
+            const bestScoreEl = document.getElementById('bestScore');
+            if (bestScoreEl && data.best_score !== undefined) {
+                bestScoreEl.classList.remove('d-none');
+                const bestScoreSpan = bestScoreEl.querySelector('.fw-bold');
+                if (bestScoreSpan) {
+                    bestScoreSpan.textContent = `${Math.round(data.best_score)}%`;
+                }
+            }
+            
+            // Show completion celebration if lesson completed
+            if (data.is_completed === true) {
+                showSuccess('🎉 Congratulations! You\'ve mastered this lesson!');
+            }
+        }
+        
+        return data;
+        
+    } catch (error) {
+        console.error('Failed to save progress:', error);
+    }
+}
 
 // ==================== DEFAULT EXPORT ====================
 

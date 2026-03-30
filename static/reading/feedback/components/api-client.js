@@ -10,7 +10,7 @@ import {
     formatTranscriptForAPI
 } from '../utils/feedback-utils.js';
 
-let apiEndpoint = '/reading/api/feedback/';
+let apiEndpoint = '/api/feedback/';
 let timeout = 10000;
 let maxRetries = 3;
 let currentController = null;

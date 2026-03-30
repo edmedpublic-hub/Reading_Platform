@@ -35,6 +35,34 @@ let elements = {
     stopBtn: null,
     voiceSelect: null
 };
+// Mobile detection
+const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// Touch event handling for buttons
+function setupTouchEvents() {
+    const buttons = ['readBtn', 'pauseBtn', 'resumeBtn', 'stopBtn', 'startListeningBtn', 'stopListeningBtn'];
+    
+    buttons.forEach(btnId => {
+        const btn = elements[btnId];
+        if (btn) {
+            // Prevent double-tap zoom on buttons (iOS)
+            btn.addEventListener('touchstart', (e) => {
+                // Prevent default only if needed, but allow click
+                if (e.cancelable) {
+                    // Do not prevent default - let click fire
+                }
+            }, { passive: false });
+        }
+    });
+}
+
+// Add this to the init function after setting up elements
+if (isMobileDevice()) {
+    setupTouchEvents();
+    console.log('Mobile device detected - touch optimizations applied');
+}
 
 // Split text into segments based on Arabic content
 function splitTextByLanguage(text) {

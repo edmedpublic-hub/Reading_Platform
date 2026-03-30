@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Progress - Reading Platform{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.min.css">
+<style>
+    .analytics-card {
+        border-radius: 16px;
+        transition: transform 0.2s ease;
+    }
+    .analytics-card:hover {
+        transform: translateY(-4px);
+    }
+    .weak-word {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+    .strong-word {
+        background-color: #d1e7dd;
+        border-left: 4px solid #198754;
+    }
+    .progress-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0 auto;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    .stats-number {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #0d6efd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4">📊 My Progress</h1>
+    
+    <div class="row g-4">
+        <!-- Weekly Progress Chart -->
+        <div class="col-lg-8">
+            <div class="card analytics-card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">📈 Weekly Progress</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="weeklyProgressChart" height="250"></canvas>
+                    <div id="weeklyProgressEmpty" class="text-center text-muted py-5 d-none">
+                        No data yet. Complete some lessons to see your progress!
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Stats -->
+        <div class="col-lg-4">
+            <div class="card analytics-card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">🏆 Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="progress-circle">
+                            <span id="avgScore">0</span>%
+                        </div>
+                        <small class="text-muted mt-2 d-block">Average Score</small>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span>📚 Lessons Completed:</span>
+                        <strong id="completedLessons" class="stats-number">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>🎤 Total Attempts:</span>
+                        <strong id="totalAttempts" class="stats-number">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>📝 Total Lessons:</span>
+                        <strong id="totalLessons" class="stats-number">0</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span>📈 Completion Rate:</span>
+                        <strong id="completionRate" class="stats-number">0</strong><span>%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Weak Words -->
+        <div class="col-md-6">
+            <div class="card analytics-card shadow-sm">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0">📝 Words to Practice</h5>
+                </div>
+                <div class="card-body" id="weakWordsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading your weak words...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Strong Words -->
+        <div class="col-md-6">
+            <div class="card analytics-card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">⭐ Words You've Mastered</h5>
+                </div>
+                <div class="card-body" id="strongWordsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading your strengths...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Difficult Lessons -->
+        <div class="col-md-12">
+            <div class="card analytics-card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">📖 Lessons to Review</h5>
+                </div>
+                <div class="card-body" id="difficultLessonsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading your lessons...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    async function loadAnalytics() {
+        try {
+            // Load dashboard stats
+            const statsRes = await fetch('/api/analytics/dashboard-stats/');
+            const statsData = await statsRes.json();
+            
+            if (statsData.success) {
+                document.getElementById('avgScore').textContent = Math.round(statsData.stats.average_score);
+                document.getElementById('completedLessons').textContent = statsData.stats.completed_lessons;
+                document.getElementById('totalAttempts').textContent = statsData.stats.total_attempts;
+                document.getElementById('totalLessons').textContent = statsData.stats.total_lessons;
+                document.getElementById('completionRate').textContent = Math.round(statsData.stats.completion_rate);
+            }
+            
+            // Load weekly progress
+            const progressRes = await fetch('/api/analytics/weekly-progress/');
+            const progressData = await progressRes.json();
+            
+            if (progressData.success && progressData.weekly_progress.dates.length > 0) {
+                const ctx = document.getElementById('weeklyProgressChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: progressData.weekly_progress.dates,
+                        datasets: [{
+                            label: 'Average Score (%)',
+                            data: progressData.weekly_progress.scores,
+                            borderColor: '#0d6efd',
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                min: 0,
+                                max: 100,
+                                title: { display: true, text: 'Score (%)' }
+                            }
+                        }
+                    }
+                });
+            } else {
+                document.getElementById('weeklyProgressChart').classList.add('d-none');
+                document.getElementById('weeklyProgressEmpty').classList.remove('d-none');
+            }
+            
+            // Load weak words
+            const weakRes = await fetch('/api/analytics/weak-words/');
+            const weakData = await weakRes.json();
+            
+            if (weakData.success && weakData.weak_words && weakData.weak_words.length > 0) {
+                document.getElementById('weakWordsList').innerHTML = weakData.weak_words.map(w => `
+                    <div class="weak-word p-3 mb-2 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="fs-5">${escapeHtml(w.word)}</strong>
+                            <span class="badge ${w.success_rate >= 50 ? 'bg-warning' : 'bg-danger'}">${w.success_rate}%</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-warning" style="width: ${w.success_rate}%"></div>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Attempts: ${w.total_attempts} | Correct: ${w.correct_attempts}</small>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('weakWordsList').innerHTML = '<div class="alert alert-success text-center">✨ Great! No weak words found. Keep practicing!</div>';
+            }
+            
+            // Load strong words
+            const strongRes = await fetch('/api/analytics/user-strengths/');
+            const strongData = await strongRes.json();
+            
+            if (strongData.success && strongData.strengths && strongData.strengths.length > 0) {
+                document.getElementById('strongWordsList').innerHTML = strongData.strengths.map(w => `
+                    <div class="strong-word p-3 mb-2 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong class="fs-5">${escapeHtml(w.word)}</strong>
+                            <span class="badge bg-success">${w.success_rate}%</span>
+                        </div>
+                        <div class="progress mt-2" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: ${w.success_rate}%"></div>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Attempts: ${w.total_attempts} | Correct: ${w.correct_attempts}</small>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('strongWordsList').innerHTML = '<div class="alert alert-info text-center">Keep practicing to build your strengths!</div>';
+            }
+            
+            // Load difficult lessons
+            const difficultRes = await fetch('/api/analytics/difficult-lessons/');
+            const difficultData = await difficultRes.json();
+            
+            if (difficultData.success && difficultData.difficult_lessons && difficultData.difficult_lessons.length > 0) {
+                document.getElementById('difficultLessonsList').innerHTML = difficultData.difficult_lessons.map(l => `
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                        <div>
+                            <strong>${escapeHtml(l.lesson_title)}</strong>
+                            <br>
+                            <small class="text-muted">${l.total_attempts} attempts</small>
+                        </div>
+                        <div class="text-end">
+                            <span class="badge ${l.best_score >= 70 ? 'bg-success' : l.best_score >= 50 ? 'bg-warning' : 'bg-danger'} mb-2 d-block">
+                                Best: ${l.best_score}%
+                            </span>
+                            <a href="/lessons/${l.lesson_id}/" class="btn btn-sm btn-outline-primary">Review</a>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                document.getElementById('difficultLessonsList').innerHTML = '<div class="alert alert-success text-center">🎉 No difficult lessons! You\'re doing great!</div>';
+            }
+            
+        } catch (error) {
+            console.error('Failed to load analytics:', error);
+            document.getElementById('weakWordsList').innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+            document.getElementById('strongWordsList').innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+            document.getElementById('difficultLessonsList').innerHTML = '<div class="alert alert-danger">Error loading data. Please refresh the page.</div>';
+        }
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    document.addEventListener('DOMContentLoaded', loadAnalytics);
+</script>
+{% endblock %}

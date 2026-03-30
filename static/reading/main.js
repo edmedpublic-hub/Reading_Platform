@@ -52,7 +52,7 @@ const ReadingApp = {
         if (!lesson || !lesson.id) return;
 
         try {
-            const response = await fetch(`/reading/api/lessons/${lesson.id}/`);
+            const response = await fetch(`/api/lessons/${lesson.id}/`);
             const data = await response.json();
 
             if (data && data.content) {

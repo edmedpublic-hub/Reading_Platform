@@ -55,7 +55,10 @@
 
 {% block content %}
 
-<div class="container py-3" id="reading-app" data-lesson-id="{{ lesson.id }}" data-auto-init="true">
+<div class="container py-3" id="reading-app" 
+     data-lesson-id="{{ lesson.id }}" 
+     data-user-id="{% if user.is_authenticated %}{{ user.id }}{% endif %}"
+     data-auto-init="true">
 
     <!-- Breadcrumb Navigation -->
     <nav aria-label="breadcrumb" class="mb-4">
@@ -92,7 +95,14 @@
 
                     <!-- Best Score Display (optional - can be populated from backend) -->
                     <div id="bestScore" class="small text-muted mb-2 d-none">
-                        Best: <span class="fw-bold">--%</span>
+                        Best Score: <span class="fw-bold">--%</span>
+                    </div>
+
+                    <!-- Lesson Completed Badge -->
+                    <div id="lessonCompletedBadge" class="d-none mb-2">
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            ✓ Lesson Completed!
+                        </span>
                     </div>
 
                     <!-- Lesson Text Container (populated by JS) -->
